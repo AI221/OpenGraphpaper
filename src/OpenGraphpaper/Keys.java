@@ -14,6 +14,8 @@ import javax.swing.JMenuItem;
 
 
 public class Keys implements KeyListener, ActionListener, ItemListener, MouseListener {
+    private int startTileX = -1;
+    private int startTileY = -1;
     public Keys() 
     {
         System.out.println("hello");
@@ -25,6 +27,10 @@ public class Keys implements KeyListener, ActionListener, ItemListener, MouseLis
         {
             Main.all.insertText(0);
         }
+	else if (character == '^')
+	{
+	    Main.all.insertText(1);
+	}
         else
         {
             Main.all.insertText(character);
@@ -79,6 +85,7 @@ public class Keys implements KeyListener, ActionListener, ItemListener, MouseLis
         int x = (int) Math.floor(e.getX()/20);
         int y = (int) Math.floor((e.getY())/20);
         Main.all.moveHighlighted(x,y);
+	Main.all.drawLine(x,y,startTileX,startTileY);
     }
 
     @Override
@@ -95,6 +102,8 @@ public class Keys implements KeyListener, ActionListener, ItemListener, MouseLis
 
     @Override
     public void mousePressed(MouseEvent e) {
+	startTileX = (int) Math.floor(e.getX()/20);
+        startTileY = (int) Math.floor((e.getY())/20);
     }
 
     @Override

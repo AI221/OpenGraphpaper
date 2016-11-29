@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
@@ -64,7 +66,7 @@ public class All {
 
     public void createAndShowGUI() {
 	JDialog dialog = new JDialog();
-	dialog.setSize(175, 100);
+	dialog.setSize(640, 480);
 	/*JLabel label = new JLabel("Please wait...");
         
         
@@ -78,7 +80,7 @@ public class All {
 	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 	Insets fins = frame.getInsets();
-	frame.setSize(640 + fins.left + fins.right, 480 + fins.top + fins.bottom);
+	frame.setSize(640, 480);
 	JPanel pane = new JPanel();//frame.getContentPane();
 	pane.setLayout(new GridBagLayout());
 	JScrollPane scrollPane = new JScrollPane(pane);
@@ -126,11 +128,6 @@ public class All {
 
 	menuBar.add(menu);
 
-	JMenuItem clrSheet = new JMenuItem("Clear Sheet");
-	clrSheet.addActionListener(keys);
-
-	menu.add(clrSheet);
-
 	JMenuItem saveSheet = new JMenuItem("Save Sheet");
 	saveSheet.addActionListener(keys);
 
@@ -145,6 +142,11 @@ public class All {
 	about.addActionListener(keys);
 
 	menu.add(about);
+		
+	JMenuItem clrSheet = new JMenuItem("Clear Sheet");
+	clrSheet.addActionListener(keys);
+
+	menu.add(clrSheet);
 
 	//
 	frame.add(scrollPane);
@@ -204,9 +206,21 @@ public class All {
 
     public void insertText(int value) //special operations
     {
-	if (value == 0) {
+	if (value == 0) 
+	{
+	    cells[highlightedX][highlightedY].setText(" ");
+	    cells[highlightedX][highlightedY].setLine(0);
+	    cells[highlightedX][highlightedY].setScript(0);
+	    cells[highlightedX][highlightedY].repaint();
 	    pushHighlighted(-1, 0);
 	    cells[highlightedX][highlightedY].setText(" ");
+	    cells[highlightedX][highlightedY].setLine(0);
+	    cells[highlightedX][highlightedY].setScript(0);
+	    cells[highlightedX][highlightedY].repaint();
+	}
+	else if (value == 1)
+	{
+	    cells[highlightedX][highlightedY].increaseScript();
 	    cells[highlightedX][highlightedY].repaint();
 	}
     }
@@ -216,6 +230,8 @@ public class All {
 	    for (int x = 0; x < ammountSqrX; x++) {
 		cells[x][y].setText(" ");
 		cells[x][y].setHighlighted(false);
+		cells[x][y].setLine(0);
+		cells[x][y].setScript(0);
 		//cells[x][y].repaint();
 	    }
 	}
@@ -247,6 +263,7 @@ public class All {
 
     }
 
+    @SuppressWarnings("empty-statement")
     public void save() {
 	int returnVal = fc.showSaveDialog(frame);
 
@@ -255,21 +272,31 @@ public class All {
 
 	    System.out.println("SAVE!!!");
 	    String cellStuffs[][] = new String[ammountSqrX][ammountSqrY];
+	    int cellStuffsLines[][] = new int[ammountSqrX][ammountSqrY];
+	    int cellStuffsScript[][] = new int[ammountSqrX][ammountSqrY];
             //JSONObject stuffs = new JSONOject();
 
 	    for (int y = 0; y < ammountSqrY; y++) {
 		for (int x = 0; x < ammountSqrX; x++) {
 		    cellStuffs[x][y] = cells[x][y].getText();
+		    cellStuffsLines[x][y] = cells[x][y].getLine();
+		    cellStuffsScript[x][y] = cells[x][y].getScript();
 		}
 	    }
 	    //no idea what this does
 	    ObjectOutputStream out;
-	    try {
-		out = new ObjectOutputStream(
-			new FileOutputStream(file.getPath())
+	    try 
+	    {
+		out = new ObjectOutputStream
+		(
+		    new FileOutputStream(file.getPath())
 		);
 		out.writeObject(cellStuffs);
-	    } catch (IOException ex) {
+		out.writeObject(cellStuffsLines);
+		out.writeObject(cellStuffsScript);
+	    } 
+	    catch (IOException ex) 
+	    {
 		JOptionPane.showMessageDialog(frame, ex.getMessage(), ex.getMessage(), 0);
 	    }
 	}
@@ -283,11 +310,17 @@ public class All {
 	    try {
 		in = new ObjectInputStream(new FileInputStream(fc.getSelectedFile().getPath()));
 		String[][] cellStuffs;
+		int[][] cellStuffsLines;
+		int[][] cellStuffsScript;
 		cellStuffs = (String[][]) in.readObject();
+		cellStuffsLines = (int[][]) in.readObject();
+		cellStuffsScript = (int[][]) in.readObject();
 		in.close();
 		for (int y = 0; y < ammountSqrY; y++) {
 		    for (int x = 0; x < ammountSqrX; x++) {
 			cells[x][y].setText(cellStuffs[x][y]);
+			cells[x][y].setLine(cellStuffsLines[x][y]);
+			cells[x][y].setScript(cellStuffsScript[x][y]);
 		    }
 		}
 	    } catch (IOException ex) {
@@ -309,5 +342,27 @@ public class All {
     public void about()
     {
 	JOptionPane.showMessageDialog(frame, "OpenGraphpaper is a tool for student's use. It enables students to do 'hand' math on the computer,\n which is helpful to those who do not have good handwriting, those who are on the go, or even those with disabilities. \nIt does not solve the equations for you, it is for you to learn by solving them for yourself.\nCheck out the github at: https://github.com/AI221/OpenGraphpaper");
+    }
+    public void drawLine(int x, int y, int startTileX, int startTileY)
+    {
+	if (!(x-startTileX==0))
+	{
+	    for (int i=min(startTileX,x);i<max(startTileX,x)+1;i++) 
+	    {
+	       cells[i][y].setLine(2);
+	       System.out.println("Y: "+y+" X: "+i);
+	    }
+	    frame.repaint();
+	}
+	else if (!(y-startTileY == 0))
+	{
+	    for (int i=min(startTileY,y);i<max(startTileY,y)+1;i++) 
+	    {
+	       cells[x][i].setLine(1);
+	       System.out.println("Y: "+i+" X: "+x);
+	    }
+	    frame.repaint();
+	}
+	
     }
 }
